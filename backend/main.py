@@ -105,6 +105,12 @@ async def root():
         "features": ["speech_to_text", "text_to_speech", "multilingual", "live_data"]
     }
 
+# Add a dedicated health check endpoint for Render and other monitoring services
+@app.get("/health")
+async def health_check():
+    """Dedicated health check endpoint for deployment platforms"""
+    return {"status": "healthy", "timestamp": datetime.now().isoformat()}
+
 # Enhanced query endpoint (uses Groq LLM)
 @app.post("/query")
 async def process_query(request: QueryRequest):
