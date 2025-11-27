@@ -1,5 +1,5 @@
 {
-  "apiBaseUrl": "https://prakriti-backend.onrender.com",
+  "apiBaseUrl": "https://prakriti-m23v.onrender.com",
   "comments": {
     "development": "For development, use http://localhost:8000",
     "production": "For production deployment, replace with your deployed backend URL e.g., https://your-app.onrender.com",
