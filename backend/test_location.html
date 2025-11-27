@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Location Test</title>
+</head>
+<body>
+    <h1>Location Test</h1>
+    <button onclick="getLocation()">Get My Location</button>
+    <p id="status">Click the button to get your location</p>
+    <p id="coords"></p>
+    
+    <script>
+        function getLocation() {
+            const status = document.getElementById('status');
+            const coords = document.getElementById('coords');
+            
+            status.textContent = "Getting location...";
+            
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        const latitude = position.coords.latitude;
+                        const longitude = position.coords.longitude;
+                        status.textContent = "Location found!";
+                        coords.textContent = `Latitude: ${latitude}, Longitude: ${longitude}`;
+                        
+                        // Send to our backend
+                        fetch(`http://localhost:8000/live-data/weather/gps/${latitude}/${longitude}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                coords.innerHTML += `<br><br>Weather Data:<br>
+                                Region: ${data.region}<br>
+                                Temperature: ${data.temperature}°C<br>
+                                Humidity: ${data.humidity}%<br>
+                                Condition: ${data.weather_condition}`;
+                            })
+                            .catch(error => {
+                                coords.innerHTML += `<br><br>Error fetching weather: ${error}`;
+                            });
+                    },
+                    function(error) {
+                        status.textContent = "Error getting location: " + error.message;
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    }
+                );
+            } else {
+                status.textContent = "Geolocation is not supported by this browser.";
+            }
+        }
+    </script>
+</body>
+</html>

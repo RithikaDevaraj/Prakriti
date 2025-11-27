@@ -1,0 +1,111 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Dependency directories
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Python cache and database files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.sqlite
+*.sqlite3
+.cache.sqlite
+backend/.cache.sqlite
+*.db
+
+# Model cache files
+.cache/
+*.cache
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+.env/
+backend/.venv/
+
+# Environment variables files (CRITICAL: These contain API keys and secrets)
+.env
+.env.local
+.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE and editor files
+*.sublime-project
+*.sublime-workspace
+.atoms/
+.buildlog/
+.history
+.svn/
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Build outputs
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Coverage reports
+coverage/
+*.lcov
+
+# Temp files
+*.tmp
+*.temp
+
+# Android
+android/.gradle
+android/local.properties
+android/app/build/
+android/capacitor-cordova-android-plugins/build/
+
+# API keys and secrets (be careful with this)
+*.key
+*.pem
+*.pub
+id_rsa
+id_rsa.pub
+
+# Render deployment files
+.env.render
+.render
+
+# Docker
+.dockerignore
+Dockerfile*
+
+# Temporary files
+*.tmp
+*.log
+*.bak
