@@ -12,3 +12,6 @@ scikit-learn>=1.0.0
 faster-whisper>=0.5.0
 openmeteo-requests>=1.0.0
 openmeteo-sdk>=1.0.0
+soundfile>=0.12.1
+aiohttp>=3.8.0
+joblib>=1.1.0
