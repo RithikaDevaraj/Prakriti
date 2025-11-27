@@ -1,12 +1,13 @@
-from fastapi import FastAPI, HTTPException, File, UploadFile, Form
+from fastapi import FastAPI, HTTPException, File, UploadFile, Form, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import JSONResponse, StreamingResponse, FileResponse
 from pydantic import BaseModel
 from typing import Dict, List, Any, Optional
 import logging
 import uvicorn
 import io
 import asyncio
+import os
 from datetime import datetime
 from config import config
 from kg_connector import neo4j_connector
@@ -45,6 +46,10 @@ class QueryRequest(BaseModel):
 
 class VoiceQueryRequest(BaseModel):
     language: Optional[str] = "auto"
+
+class TTSRequest(BaseModel):
+    text: str
+    language: Optional[str] = "en"
 
 class RecommendationRequest(BaseModel):
     crop_name: str
@@ -97,7 +102,7 @@ async def root():
         "message": "Enhanced Agentic KG-RAG System for Indian Agriculture",
         "status": "healthy",
         "version": "2.0.0",
-        "features": ["speech_to_text", "multilingual", "live_data"]
+        "features": ["speech_to_text", "text_to_speech", "multilingual", "live_data"]
     }
 
 # Enhanced query endpoint (uses Groq LLM)
@@ -163,6 +168,34 @@ async def process_voice_query(
     except Exception as e:
         logger.error(f"Error processing voice query: {e}")
         raise HTTPException(status_code=500, detail=f"Error processing voice query: {str(e)}")
+
+# Text-to-speech endpoint
+@app.post("/text-to-speech")
+async def text_to_speech(request: TTSRequest):
+    """Convert text to speech using gTTS"""
+    try:
+        # Generate speech file
+        audio_file_path = await voice_handler.text_to_speech(
+            request.text, request.language
+        )
+        
+        if not audio_file_path:
+            raise HTTPException(status_code=500, detail="Failed to generate speech")
+        
+        # Return the audio file with cleanup
+        background_tasks = BackgroundTasks()
+        background_tasks.add_task(os.remove, audio_file_path)
+        
+        return FileResponse(
+            path=audio_file_path,
+            media_type="audio/mpeg",
+            filename="response.mp3",
+            background=background_tasks
+        )
+        
+    except Exception as e:
+        logger.error(f"Error in text-to-speech: {e}")
+        raise HTTPException(status_code=500, detail=f"TTS error: {str(e)}")
 
 # Translation removed - Llama 3.1 8B handles languages directly
 
@@ -253,6 +286,7 @@ async def get_supported_languages():
     """Get list of supported languages (handled by Llama 3.1 8B)"""
     return {
         "stt_languages": voice_handler.get_supported_languages(),
+        "tts_languages": voice_handler.get_supported_languages(),
         "llm_languages": ["en", "hi", "ta", "te", "bn", "gu", "kn", "ml"]  # Languages supported by Llama 3.1 8B
     }
 
@@ -391,10 +425,10 @@ async def get_system_status():
             "neo4j": neo4j_status,
             "rag_pipeline": "initialized",
             "live_data_service": live_data_summary,
-            "voice_handler": "ready (STT only)",
+            "voice_handler": "ready (STT and TTS)",
             "config_valid": config.validate_config(),
             "features": {
-                "voice_support": "STT only",
+                "voice_support": "Full (STT and TTS)",
                 "multilingual": True,  # Via Llama 3.1 8B
                 "live_data": True
             }

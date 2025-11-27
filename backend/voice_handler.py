@@ -1,10 +1,19 @@
 import io
 import logging
 import numpy as np
+import tempfile
+import os
 from typing import Optional, Dict, Any
-import soundfile as sf
 from config import config
 from faster_whisper import WhisperModel
+
+# Try to import gTTS for text-to-speech
+try:
+    from gtts import gTTS
+    TTS_AVAILABLE = True
+except ImportError:
+    TTS_AVAILABLE = False
+    logging.warning("gTTS not available for text-to-speech")
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -56,6 +65,45 @@ class VoiceHandler:
             logger.error(f"Error in speech-to-text: {e}")
             return None
     
+    async def text_to_speech(self, text: str, language: str = "en") -> Optional[str]:
+        """Convert text to speech using gTTS and return the path to the audio file"""
+        if not TTS_AVAILABLE:
+            logger.warning("Text-to-speech is not available as gTTS is not installed")
+            return None
+        
+        try:
+            # Map language codes to gTTS compatible codes
+            lang_mapping = {
+                "en": "en",
+                "hi": "hi",
+                "ta": "ta",
+                "te": "te",
+                "bn": "bn",
+                "mr": "mr",
+                "gu": "gu",
+                "kn": "kn",
+                "ml": "ml",
+                "or": "or",
+                "pa": "pa",
+                "ur": "ur"
+            }
+            
+            # Use English as fallback if language not supported
+            tts_lang = lang_mapping.get(language, "en")
+            
+            # Generate speech
+            tts = gTTS(text=text, lang=tts_lang)
+            
+            # Save to temporary file
+            tmp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3")
+            tts.save(tmp_file.name)
+            
+            logger.info(f"Text-to-speech generated successfully for language {tts_lang}")
+            return tmp_file.name
+            
+        except Exception as e:
+            logger.error(f"Error in text-to-speech: {e}")
+            return None
     
     def get_supported_languages(self) -> Dict[str, str]:
         """Get list of supported languages for speech-to-text"""
