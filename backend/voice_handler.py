@@ -1,11 +1,10 @@
 import io
 import logging
-import numpy as np
 import tempfile
 import os
 from typing import Optional, Dict, Any
+import speech_recognition as sr
 from config import config
-from faster_whisper import WhisperModel
 
 # Try to import gTTS for text-to-speech
 try:
@@ -15,52 +14,55 @@ except ImportError:
     TTS_AVAILABLE = False
     logging.warning("gTTS not available for text-to-speech")
 
+# Initialize speech recognizer
+recognizer = sr.Recognizer()
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class VoiceHandler:
     def __init__(self):
-        # Initialize faster-whisper model for STT
-        self.whisper_model = None
-        self.initialize_whisper_model()
+        # No initialization needed for SpeechRecognition
+        pass
         
     
-    def initialize_whisper_model(self):
-        """Initialize the faster-whisper model for speech-to-text"""
-        try:
-            # Using the small model for better memory efficiency on Render free tier
-            self.whisper_model = WhisperModel("small", device="cpu", compute_type="int8")
-            logger.info("Faster-Whisper small model initialized successfully")
-        except Exception as e:
-            logger.error(f"Error initializing Faster-Whisper small model: {e}")
-            # Fallback to tiny model if small fails
-            try:
-                self.whisper_model = WhisperModel("tiny", device="cpu", compute_type="int8")
-                logger.info("Faster-Whisper tiny model initialized as fallback")
-            except Exception as e2:
-                logger.error(f"Error initializing Faster-Whisper tiny model: {e2}")
-    
     async def speech_to_text(self, audio_data: bytes, language: str = "auto") -> Optional[str]:
-        """Convert speech to text using faster-whisper"""
+        """Convert speech to text using SpeechRecognition"""
         try:
-            if not self.whisper_model:
-                logger.error("Whisper model not initialized")
-                return None
+            # Convert to AudioData object
+            audio = sr.AudioData(audio_data, 16000, 2)  # Assuming 16kHz mono audio
             
-            # Convert audio bytes to numpy array
-            audio_buffer = io.BytesIO(audio_data)
+            # Map language codes to SpeechRecognition codes
+            lang_mapping = {
+                "en": "en-US",
+                "hi": "hi-IN",
+                "ta": "ta-IN",
+                "te": "te-IN",
+                "bn": "bn-IN",
+                "mr": "mr-IN",
+                "gu": "gu-IN",
+                "kn": "kn-IN",
+                "ml": "ml-IN",
+                "or": "or-IN",
+                "pa": "pa-IN",
+                "ur": "ur-PK"
+            }
             
-            # Use faster-whisper to transcribe
-            # If language is auto, let Whisper detect it
-            segments, info = self.whisper_model.transcribe(
-                audio_buffer, 
-                language=None if language == "auto" else language
-            )
-            transcription = " ".join([segment.text for segment in segments])
+            # Use English as fallback if language not supported
+            recognize_lang = lang_mapping.get(language, "en-US")
             
-            logger.info(f"Speech transcribed: {transcription[:50]}...")
-            return transcription
+            # Recognize speech
+            text = recognizer.recognize_google(audio, language=recognize_lang)
             
+            logger.info(f"Speech transcribed: {text[:50]}...")
+            return text
+            
+        except sr.UnknownValueError:
+            logger.warning("Speech Recognition could not understand audio")
+            return None
+        except sr.RequestError as e:
+            logger.error(f"Could not request results from Google Speech Recognition service; {e}")
+            return None
         except Exception as e:
             logger.error(f"Error in speech-to-text: {e}")
             return None
@@ -106,7 +108,7 @@ class VoiceHandler:
             return None
     
     def get_supported_languages(self) -> Dict[str, str]:
-        """Get list of supported languages for speech-to-text"""
+        """Get list of supported languages for speech-to-text (using Google Speech Recognition)"""
         return {
             "en": "English",
             "hi": "हिंदी (Hindi)",
