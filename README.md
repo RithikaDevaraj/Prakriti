@@ -228,6 +228,7 @@ pnpm test
 ### Production Deployment
 
 #### Environment Setup
+
 ```bash
 # Set production environment variables
 export NODE_ENV=production
@@ -235,20 +236,27 @@ export API_URL=https://your-api-domain.com
 ```
 
 #### Build Frontend
+
 ```bash
 pnpm run build
 ```
 
 #### Deploy Backend
+
 ```bash
 # Use production WSGI server
 gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker
 ```
 
 #### Docker Production
+
 ```bash
 docker-compose -f docker-compose.prod.yml up -d
 ```
+
+#### Memory Considerations for Free Tier Deployments
+
+When deploying to free tier services like Render's free plan, memory constraints can be an issue with large ML models. The application automatically uses smaller Whisper models (small/tiny) on deployment to fit within the 512MB memory limit. For production deployments with more resources, you can modify the voice_handler.py to use larger models for better accuracy.
 
 ## 🤝 Contributing
 1. Fork the repository

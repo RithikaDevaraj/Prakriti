@@ -28,17 +28,17 @@ class VoiceHandler:
     def initialize_whisper_model(self):
         """Initialize the faster-whisper model for speech-to-text"""
         try:
-            # Using the medium model for better accuracy
-            self.whisper_model = WhisperModel("medium", device="cpu", compute_type="int8")
-            logger.info("Faster-Whisper model initialized successfully")
+            # Using the small model for better memory efficiency on Render free tier
+            self.whisper_model = WhisperModel("small", device="cpu", compute_type="int8")
+            logger.info("Faster-Whisper small model initialized successfully")
         except Exception as e:
-            logger.error(f"Error initializing Faster-Whisper model: {e}")
-            # Fallback to small model if medium fails
+            logger.error(f"Error initializing Faster-Whisper small model: {e}")
+            # Fallback to tiny model if small fails
             try:
-                self.whisper_model = WhisperModel("small", device="cpu", compute_type="int8")
-                logger.info("Faster-Whisper small model initialized as fallback")
+                self.whisper_model = WhisperModel("tiny", device="cpu", compute_type="int8")
+                logger.info("Faster-Whisper tiny model initialized as fallback")
             except Exception as e2:
-                logger.error(f"Error initializing Faster-Whisper small model: {e2}")
+                logger.error(f"Error initializing Faster-Whisper tiny model: {e2}")
     
     def initialize_coqui_tts(self):
         """Initialize Coqui-TTS for text-to-speech"""
