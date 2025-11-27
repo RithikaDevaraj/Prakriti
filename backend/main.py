@@ -46,11 +46,6 @@ class QueryRequest(BaseModel):
 class VoiceQueryRequest(BaseModel):
     language: Optional[str] = "auto"
 
-class TTSRequest(BaseModel):
-    text: str
-    language: Optional[str] = "en"
-    voice: Optional[str] = "alloy"
-
 class RecommendationRequest(BaseModel):
     crop_name: str
     soil_type: str
@@ -102,7 +97,7 @@ async def root():
         "message": "Enhanced Agentic KG-RAG System for Indian Agriculture",
         "status": "healthy",
         "version": "2.0.0",
-        "features": ["voice_support", "multilingual", "live_data"]
+        "features": ["speech_to_text", "multilingual", "live_data"]
     }
 
 # Enhanced query endpoint (uses Groq LLM)
@@ -168,28 +163,6 @@ async def process_voice_query(
     except Exception as e:
         logger.error(f"Error processing voice query: {e}")
         raise HTTPException(status_code=500, detail=f"Error processing voice query: {str(e)}")
-
-# Text-to-speech endpoint
-@app.post("/text-to-speech")
-async def text_to_speech(request: TTSRequest):
-    """Convert text to speech"""
-    try:
-        audio_data = await voice_handler.text_to_speech(
-            request.text, request.language, request.voice
-        )
-        
-        if not audio_data:
-            raise HTTPException(status_code=500, detail="Failed to generate speech")
-        
-        return StreamingResponse(
-            io.BytesIO(audio_data),
-            media_type="audio/wav",
-            headers={"Content-Disposition": "attachment; filename=response.wav"}
-        )
-        
-    except Exception as e:
-        logger.error(f"Error in text-to-speech: {e}")
-        raise HTTPException(status_code=500, detail=f"TTS error: {str(e)}")
 
 # Translation removed - Llama 3.1 8B handles languages directly
 
@@ -279,7 +252,7 @@ async def update_live_data():
 async def get_supported_languages():
     """Get list of supported languages (handled by Llama 3.1 8B)"""
     return {
-        "voice_languages": voice_handler.get_supported_languages(),
+        "stt_languages": voice_handler.get_supported_languages(),
         "llm_languages": ["en", "hi", "ta", "te", "bn", "gu", "kn", "ml"]  # Languages supported by Llama 3.1 8B
     }
 
@@ -418,10 +391,10 @@ async def get_system_status():
             "neo4j": neo4j_status,
             "rag_pipeline": "initialized",
             "live_data_service": live_data_summary,
-            "voice_handler": "ready",
+            "voice_handler": "ready (STT only)",
             "config_valid": config.validate_config(),
             "features": {
-                "voice_support": True,
+                "voice_support": "STT only",
                 "multilingual": True,  # Via Llama 3.1 8B
                 "live_data": True
             }
